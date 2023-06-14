@@ -313,6 +313,9 @@ class Load extends Phaser.Scene{
         playBlack.setInteractive()
         .on('pointerdown', () => this.scene.start('level1') );
 
+        creditsWhite.setInteractive()
+        .on('pointerdown', () => this.scene.start('Credits'));
+
 
 
       /*  this.tweens.chain({
@@ -720,15 +723,25 @@ class Credits extends Phaser.Scene {
         super('Credits');
     }
     preload(){
-
+        this.load.path = './assets/'
+        this.load.image('credit','credit.png');
+        this.load.image('backWhite','backWhite.png');
+        this.load.image('backBlack','backBlack.png');
+        this.load.video('chess','Chess.mov',);
+        
     }
     create(){
-        BGMusic.stop();
-        this.add.text(this.cameras.main.centerX, this.cameras.main.centerY, 'Credits page!', {font: '64px Arial', fill: '#ffffff'});
+//        this.BGMusic.stop();
+        this.add.image(960,540,'credit');
+        
+        var chess = this.add.video(700,820,'chess');
+        chess.play();
 
-        const backButton = this.add.text(100, 100, 'Back to menu', {font: '64px Arial', fill: '#ffffff'})
-        .setInteractive()
-        .on('pointerdown', () => this.scene.start('load') );
+        var backButton = this.add.image(1200,820,'backWhite');
+        backButton.setScale(100/backButton.width,100/backButton.height);
+        backButton.setDepth(100);
+        backButton.setInteractive()
+        .on('pointerdown', () => this.scene.start('load'));
     }
     update(){}
 }
