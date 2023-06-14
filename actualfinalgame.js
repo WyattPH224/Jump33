@@ -140,10 +140,22 @@ class Load extends Phaser.Scene{
 
     create() {
 
+        this.sound.unlock();
         this.BGMusic = this.sound.add('BGMusic');
-        this.BGMusic.play({
-            loop:true
-        });
+
+        if(!this.sound.locked) {
+            this.BGMusic.play({
+                loop:true
+            });
+        }
+        else {
+            this.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
+                this.BGMusic.play({
+                    loop:true
+                });
+            });
+        }
+
 
 
 
@@ -678,7 +690,7 @@ class EndCutscene extends Phaser.Scene {
         
         const backButton = this.add.text(100, 100, 'Back to menu', {font: '64px Arial', fill: '#ffffff'})
         .setInteractive()
-        .on('pointerdown', () => this.scene.start('Load') );    //we should seperate the menu fronm the loading bar idk why its like this
+        .on('pointerdown', () => this.scene.start('load') );    //we should seperate the menu fronm the loading bar idk why its like this
 
     }
     update(){}
@@ -711,11 +723,12 @@ class Credits extends Phaser.Scene {
 
     }
     create(){
+        BGMusic.stop();
         this.add.text(this.cameras.main.centerX, this.cameras.main.centerY, 'Credits page!', {font: '64px Arial', fill: '#ffffff'});
 
         const backButton = this.add.text(100, 100, 'Back to menu', {font: '64px Arial', fill: '#ffffff'})
         .setInteractive()
-        .on('pointerdown', () => this.scene.start('Load') );
+        .on('pointerdown', () => this.scene.start('load') );
     }
     update(){}
 }
