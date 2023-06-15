@@ -115,9 +115,12 @@ class Load extends Phaser.Scene{
             assetText.destroy();
         });
 
+
         this.load.path = './assets/'
+        this.load.image('fullScreen','FullScreenV2.png')
         this.load.image('firstBG','titlePageBlackWhite.png');
         this.load.image('secondBG','titlePageWhiteBlack.png');
+        this.load.image('backB','backButtonBlack.png');
         this.load.image('jumps','StudioName.png');
         this.load.image('playB','playBlack.png');
         this.load.image('playW','playWhite.png');
@@ -140,21 +143,42 @@ class Load extends Phaser.Scene{
 
     create() {
 
+        this.w = this.game.config.width;
+        this.h = this.game.config.height;
+        this.s = this.game.config.width * 0.01;
+
+        this.add.image(1850,950, "fullScreen")
+            .setDepth(110)
+            .setScale(.2)
+            //.setStyle({ fontSize: `${2 * this.s}px`, color: '#880808'})
+            .setInteractive({useHandCursor: true})
+            .on('pointerdown', () => {
+                if (this.scale.isFullscreen) {
+                    this.scale.stopFullscreen();
+                } else {
+                    this.scale.startFullscreen();
+                }
+            });
+
         this.sound.unlock();
-        this.BGMusic = this.sound.add('BGMusic');
+        musicVolume.BGMusic = this.sound.add('BGMusic');
 
         if(!this.sound.locked) {
-            this.BGMusic.play({
-                loop:true
+            musicVolume.BGMusic.play({
+                loop:true,
+                volume: musicVolume.masterVol
             });
         }
         else {
             this.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
-                this.BGMusic.play({
-                    loop:true
+                musicVolume.BGMusic.play({
+                    loop:true,
+                    volume:musicVolume.masterVol
                 });
             });
         }
+
+
 
 
 
@@ -179,22 +203,56 @@ class Load extends Phaser.Scene{
         this.settingsBox.setVisible(false);
         this.settingsBox.setDepth(101);
         this.settingsBox.fillStyle(0x000000, 1);
-        this.settingsBox.fillRect(500,200,800,800);
+        this.settingsBox.fillRect(475,175,975,750);
 
-        let musicOn = this.add.image(900,550,'musicOn');
-        musicOn.setVisible(false);
-        musicOn.setScale(600/musicOn.width,600/musicOn.height);
-        musicOn.setDepth(101);
+        this.volBar=this.add.rectangle(600,600,80,600, 0x00ffff)
+        this.volBar.setVisible(false);
+        this.volBar.setDepth(103);
+        this.slider=this.add.rectangle(600,musicVolume.sliderGlobal,160,80,0xffff00);
+        this.slider.setDepth(103);
+        this.slider.setVisible(false);
+        
 
-        let musicOff = this.add.image(900,550,'musicOff');
-        musicOff.setVisible(false);
-        musicOff.setScale(600/musicOff.width,600/musicOff.height);
-        musicOff.setDepth(101);
+
+        this.slider.setInteractive({draggable: true});
+
+        this.input.on('drag', (pointer,gameObject,dragX,dragY)=> {
+            //  By clamping dragX we can keep it within
+            //  whatever bounds we need
+            dragY = Phaser.Math.Clamp(dragY, 300, 900);
+
+            //  By only applying the dragX we can limit the drag
+            //  to be horizontal only
+            gameObject.y = dragY;
+            musicVolume.sliderGlobal = gameObject.y;
+        });
+
+
+        musicVolume.musicOn = this.add.image(1000,550,'musicOn');
+        musicVolume.musicOn.setVisible(false);
+        musicVolume.musicOn.setScale(600/musicVolume.musicOn.width,600/musicVolume.musicOn.height);
+        musicVolume.musicOn.setDepth(103);
+
+        musicVolume.musicOff = this.add.image(1000,550,'musicOff');
+        musicVolume.musicOff.setVisible(false);
+        musicVolume.musicOff.setScale(600/musicVolume.musicOff.width,600/musicVolume.musicOff.height);
+        musicVolume.musicOff.setDepth(103);
 
         
-        var backSettings = this.add.text(850,900,'BACK',{font:'50px monospace',color: '#FFFFFF'});
-        backSettings.setVisible(false);
-        backSettings.setDepth(101);
+        var backSettingsBlack = this.add.image(975,875,'backB');
+        backSettingsBlack.setScale(100/backSettingsBlack.width,100/backSettingsBlack.height);
+        backSettingsBlack.setVisible(false);
+        backSettingsBlack.setDepth(102);
+
+             
+        musicVolume.MusicOnTxt = this.add.text(900,200,'MUSIC ON',{font:'40px monospace',color: '#FFFFFF'});
+        musicVolume.MusicOnTxt.setVisible(false);
+        musicVolume.MusicOnTxt.setDepth(101);
+
+        musicVolume.MusicOffTxt = this.add.text(900,200,'MUSIC OFF',{font:'40px monospace',color: '#FFFFFF'});
+        musicVolume.MusicOffTxt.setVisible(false);
+        musicVolume.MusicOffTxt.setDepth(101);
+
 
         let playBlack = this.add.image(700,700,'playB');
         playBlack.setVisible(false);
@@ -206,14 +264,18 @@ class Load extends Phaser.Scene{
        settingsBlack.setDepth(100);
        settingsBlack.setInteractive();
        settingsBlack.on('pointerdown', () => {
-            //alert('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+            musicVolume.settingsOpen = true;
             this.settingsBox.setVisible(true);
-            backSettings.setVisible(true);
+            backSettingsBlack.setVisible(true);
+            this.volBar.setVisible(true);
+            this.slider.setVisible(true);
             if(audioImageOn == true){
-                musicOn.setVisible(true);
+                musicVolume.musicOn.setVisible(true);
+                musicVolume.MusicOnTxt.setVisible(true);
             }
             else{
-                musicOff.setVisible(true);
+                musicVolume.musicOff.setVisible(true);
+                musicVolume.MusicOffTxt.setVisible(true);
             }
        });
 
@@ -251,30 +313,47 @@ class Load extends Phaser.Scene{
 
        settingsWhite.setInteractive()
        settingsWhite.on('pointerdown', () => {
+            musicVolume.settingsOpen = true;
+            this.volBar.setVisible(true);
+            this.slider.setVisible(true);
             this.settingsBox.setVisible(true);
-            backSettings.setVisible(true);
+            backSettingsBlack.setVisible(true);
             if(audioImageOn == true){
-                musicOn.setVisible(true);
+                musicVolume.musicOn.setVisible(true);
+                musicVolume.MusicOnTxt.setVisible(true);
             }
             else{
-                musicOff.setVisible(true);
+                musicVolume.musicOff.setVisible(true);
+                musicVolume.MusicOffTxt.setVisible(true);
             }
         });
 
-       backSettings.setInteractive()
-       backSettings.on('pointerdown', () => {
+       backSettingsBlack.setInteractive()
+       backSettingsBlack.on('pointerdown', () => {
+            musicVolume.settingsOpen = false
             this.settingsBox.setVisible(false);
-            backSettings.setVisible(false);
-            musicOn.setVisible(false);
-            musicOff.setVisible(false);
+            backSettingsBlack.setVisible(false);
+            this.volBar.setVisible(false);
+            this.slider.setVisible(false);
+            musicVolume.musicOn.setVisible(false);
+            musicVolume.musicOff.setVisible(false);
+            musicVolume.MusicOnTxt.setVisible(false);
+            musicVolume.MusicOffTxt.setVisible(false);
        });
 
-       musicOn.setInteractive()
-       musicOn.on('pointerdown', () => {
-            this.BGMusic.pause();
-            musicOn.setVisible(false);
+       musicVolume.musicOn.setInteractive()
+       musicVolume.musicOn.on('pointerdown', () => {
+            musicVolume.muteVol = musicVolume.masterVol;
+            musicVolume.muteSlider = musicVolume.sliderGlobal;
+            musicVolume.masterVol = 0;
+            this.slider.y = 900;
+            musicVolume.sliderGlobal = 900;
+            musicVolume.BGMusic.volume = 0;
+           // musicVolume.musicOn.setVisible(false);
+           // musicVolume.MusicOnTxt.setVisible(false);
+          // musicVolume.MusicOffTxt.setVisible(true);
             audioImageOn = false;
-            musicOff.setVisible(true);
+          //  musicVolume.musicOff.setVisible(true);
             audioImageOff = true
             titleBGV1.setVisible(false);
             titleBGV2.setVisible(true);
@@ -288,12 +367,17 @@ class Load extends Phaser.Scene{
             creditsBlack.setVisible(true);
        });
 
-       musicOff.setInteractive()
-       musicOff.on('pointerdown', () => {
-        this.BGMusic.resume();
-        musicOn.setVisible(true);
+       musicVolume.musicOff.setInteractive()
+       musicVolume.musicOff.on('pointerdown', () => {
+        musicVolume.masterVol = musicVolume.muteVol;
+        musicVolume.sliderGlobal = musicVolume.muteSlider;
+        musicVolume.BGMusic.volume = musicVolume.masterVol;
+        this.slider.y = musicVolume.muteSlider;
+        //musicVolume.musicOn.setVisible(true);
+       // musicVolume.MusicOnTxt.setVisible(true);
+       // musicVolume.MusicOffTxt.setVisible(false);
         audioImageOn = true;
-        musicOff.setVisible(false);
+       // musicVolume.musicOff.setVisible(false);
         audioImageOff = false;        
         titleBGV1.setVisible(true);
         titleBGV2.setVisible(false);
@@ -307,82 +391,58 @@ class Load extends Phaser.Scene{
         creditsBlack.setVisible(false);
        });
 
-        playWhite.setInteractive()
-       .on('pointerdown', () => this.scene.start('level1') );
+       playWhite.setInteractive()
+       .on('pointerdown', () =>{
+        musicVolume.BGMusic.pause();
+        this.scene.start('level1')
+       });
+
 
         playBlack.setInteractive()
-        .on('pointerdown', () => this.scene.start('level1') );
-
-        creditsWhite.setInteractive()
-        .on('pointerdown', () => this.scene.start('Credits'));
-
-
-
-      /*  this.tweens.chain({
-            tweens: [
-                {
-                   targets: playButton,
-                   x: 600,
-                   duration: 300,
-                   ease:'Sine.out' 
-                },
-                {
-                    targets: settingsButton,
-                    x: 600,
-                    duration: 300,
-                    ease:'Sine.out' 
-                 },
-                 {
-                    targets: creditsButton,
-                    x: 600,
-                    duration: 300,
-                    ease:'Sine.out' 
-                 },
-                 {
-                    targets: exitButton,
-                    x: 600,
-                    duration: 300,
-                    ease:'Sine.out' 
-                 },
-                {
-                    targets: play,
-                    x: 295,
-                    duration: 1000,
-                    ease:'cubic.out',
-                },
-                {
-                targets: settings,
-                x: 240,
-                duration: 1000,
-                ease:'cubic.out',
-                },
-                  {
-                targets: credits,
-                x: 245,
-                duration: 1000,
-                ease:'cubic.out',
-                },
-                {
-                targets: exit,
-                x: 295,
-                duration: 1000,
-                ease:'cubic.out',
-                },
-            ]
+        .on('pointerdown', () => {
+            musicVolume.BGMusic.pause();
+            this.scene.start('level1') 
         });
 
-        
-        play.setInteractive()
+        creditsWhite.setInteractive()
+        .on('pointerdown', () =>{
+         musicVolume.BGMusic.pause();
+         this.scene.start('Credits')
+        });
 
-        play.on('pointerdown', () => {
-            this.gotoScene('play');
-        })
+        creditsBlack.setInteractive()
+        .on('pointerdown', () =>{
+         musicVolume.BGMusic.pause();
+         this.scene.start('Credits')
+        });
 
 
 
-        this.input.on('pointerdown', () => this.scene.start('intro'));*/
+
+
     }
 
+
+    update()
+    {
+        musicVolume.masterVol = (900-this.slider.y)/600;
+        musicVolume.BGMusic.volume = musicVolume.masterVol;
+        if(musicVolume.sliderGlobal < 900 && musicVolume.settingsOpen == true){
+            console.log('music on',musicVolume.sliderGlobal,musicVolume.settingsOpen);
+            musicVolume.musicOn.setVisible(true);
+            musicVolume.MusicOnTxt.setVisible(true);
+            musicVolume.musicOff.setVisible(false);
+            musicVolume.MusicOffTxt.setVisible(false);
+
+        }
+        else if(musicVolume.sliderGlobal >=900 && musicVolume.settingsOpen== true){
+            console.log('music off',this.slider.y,musicVolume.sliderGlobal,musicVolume.settingsOpen);
+            musicVolume.musicOn.setVisible(false);
+            musicVolume.MusicOnTxt.setVisible(false);
+            musicVolume.musicOff.setVisible(true);
+            musicVolume.MusicOffTxt.setVisible(true);
+        }
+    }
     
 
 }
@@ -465,9 +525,15 @@ class Level extends Phaser.Scene {
     }
 
     preload(){
-        
+        this.load.image('fullScreen','assets/FullScreenV2.png')
+        this.load.image('setGear','assets/settings gear.jpg')
+        this.load.image('backB','backButtonBlack.png');
+        this.load.image('musicOn','musicOn.png');
+        this.load.image('musicOff','musicOff.png');
+        this.load.audio('BGMusic','bgMusic.mp3');
         this.load.audio('jump', 'assets/jump.wav');
         this.load.audio('land', 'assets/land.wav');
+        
 
         this.load.image('player', 'assets/queen1.png');
         this.load.image('tiles', 'assets/tilesets/ActualChessTileset.png');
@@ -477,10 +543,25 @@ class Level extends Phaser.Scene {
     
     create(){
 
+        this.w = this.game.config.width;
+        this.h = this.game.config.height;
+        this.s = this.game.config.width * 0.01;
+
+        this.add.image(1850,950, 'fullScreen')
+        .setDepth(110)
+        .setScale(.2)
+        //.setStyle({ fontSize: `${2 * this.s}px`, color: '#880808'})
+        .setInteractive({useHandCursor: true})
+        .on('pointerdown', () => {
+            if (this.scale.isFullscreen) {
+                this.scale.stopFullscreen();
+            } else {
+                this.scale.startFullscreen();
+            }
+        });
         // so when we're adding backgrounds they need to load before the level and the player, might need to use a dictionary to track the order of loading?
         //since each background is specific to each level we can just load them in the level class
-
-
+        this.playerActive = true;
 
         power = 0;
         /*
@@ -493,6 +574,145 @@ class Level extends Phaser.Scene {
         */
         //not nessesary anymore
         //create player
+
+        //settings gear
+
+        this.sound.unlock();
+       // musicVolume.BGMusic = this.sound.add('BGMusic');
+        //alert(musicVolume.masterVol)
+        if(!this.sound.locked) {
+            musicVolume.BGMusic.resume({
+                loop:true,
+                volume: musicVolume.masterVol
+            });
+        }
+        else {
+            this.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
+                musicVolume.BGMusic.resume({
+                    loop:true,
+                    volume: musicVolume.masterVol
+                });
+            });
+        }
+    
+        let audioImageOn = true;
+        let audioImageOff = false; 
+
+        this.settingsBox = this.add.graphics();
+        this.settingsBox.setVisible(false);
+        this.settingsBox.setDepth(101);
+        this.settingsBox.fillStyle(0x000000, 1);
+        this.settingsBox.fillRect(475,175,975,750);
+
+        this.volBar=this.add.rectangle(600,600,80,600, 0x00ffff)
+        this.volBar.setVisible(false);
+        this.volBar.setDepth(103);
+        this.slider=this.add.rectangle(600,musicVolume.sliderGlobal,160,80,0xffff00);
+        this.slider.setDepth(103);
+        this.slider.setVisible(false);
+        
+
+
+        this.slider.setInteractive({draggable: true});
+
+        this.input.on('drag', (pointer,gameObject,dragX,dragY)=> {
+            //  By clamping dragX we can keep it within
+            //  whatever bounds we need
+            dragY = Phaser.Math.Clamp(dragY, 300, 900);
+
+            //  By only applying the dragX we can limit the drag
+            //  to be horizontal only
+            gameObject.y = dragY;
+            musicVolume.sliderGlobal = gameObject.y
+        });
+
+
+        var backSettingsBlack = this.add.image(975,875,'backB');
+        backSettingsBlack.setScale(100/backSettingsBlack.width,100/backSettingsBlack.height);
+        backSettingsBlack.setVisible(false);
+        backSettingsBlack.setDepth(102);
+
+        musicVolume.musicOn = this.add.image(1000,550,'musicOn');
+        musicVolume.musicOn.setVisible(false);
+        musicVolume.musicOn.setScale(600/musicVolume.musicOn.width,600/musicVolume.musicOn.height);
+        musicVolume.musicOn.setDepth(103);
+
+        musicVolume.musicOff = this.add.image(1000,550,'musicOff');
+        musicVolume.musicOff.setVisible(false);
+        musicVolume.musicOff.setScale(600/musicVolume.musicOff.width,600/musicVolume.musicOff.height);
+        musicVolume.musicOff.setDepth(103);
+
+             
+        musicVolume.MusicOnTxt = this.add.text(900,200,'MUSIC ON',{font:'40px monospace',color: '#FFFFFF'});
+        musicVolume.MusicOnTxt.setVisible(false);
+        musicVolume.MusicOnTxt.setDepth(101);
+
+        musicVolume.MusicOffTxt = this.add.text(900,200,'MUSIC OFF',{font:'40px monospace',color: '#FFFFFF'});
+        musicVolume.MusicOffTxt.setVisible(false);
+        musicVolume.MusicOffTxt.setDepth(101);
+
+        var settingsGear = this.add.image(50,50,'setGear');
+        settingsGear.setScale(100/settingsGear.width,100/settingsGear.height);
+        settingsGear.setDepth(105)
+        settingsGear.setInteractive();
+        settingsGear.on('pointerdown', () => {
+            musicVolume.settingsOpen = true
+            this.playerActive = false;
+            this.settingsBox.setVisible(true);
+            backSettingsBlack.setVisible(true);
+            this.volBar.setVisible(true);
+            this.slider.setVisible(true);
+            if(audioImageOn == true){
+                musicVolume.musicOn.setVisible(true);
+                musicVolume.MusicOnTxt.setVisible(true);
+            }
+            else{
+                musicVolume.musicOff.setVisible(true);
+                musicVolume.MusicOffTxt.setVisible(true);
+            }
+       });
+
+
+       backSettingsBlack.setInteractive()
+       backSettingsBlack.on('pointerdown', () => {
+            this.timedEvent = this.time.delayedCall(1000, this.onEvent, [], this);
+            musicVolume.settingsOpen = false
+            //this.playerActive = true;
+            this.settingsBox.setVisible(false);
+            backSettingsBlack.setVisible(false);
+            this.volBar.setVisible(false);
+            this.slider.setVisible(false);
+            musicVolume.musicOn.setVisible(false);
+            musicVolume.musicOff.setVisible(false);
+            musicVolume.MusicOnTxt.setVisible(false);
+            musicVolume.MusicOffTxt.setVisible(false);
+       });
+
+       musicVolume.musicOn.setInteractive()
+       musicVolume.musicOn.on('pointerdown', () => {
+            musicVolume.muteVol = musicVolume.masterVol;
+            musicVolume.muteSlider = musicVolume.sliderGlobal;
+            musicVolume.masterVol = 0;
+            this.slider.y = 900;
+            musicVolume.sliderGlobal = 900;
+            musicVolume.BGMusic.volume = 0;
+            audioImageOn = false;
+            //  musicVolume.musicOff.setVisible(true);
+              audioImageOff = true
+       });
+
+       musicVolume.musicOff.setInteractive()
+       musicVolume.musicOff.on('pointerdown', () => {
+        musicVolume.masterVol = musicVolume.muteVol;
+        musicVolume.sliderGlobal = musicVolume.muteSlider;
+        musicVolume.BGMusic.volume = musicVolume.masterVol;
+        this.slider.y = musicVolume.muteSlider;
+        audioImageOn = true;
+        //  musicVolume.musicOff.setVisible(true);
+          audioImageOff = false
+       });
+
+
         this.player = this.physics.add.sprite(currentX, currentY, 'player');
         this.player.body.allowGravity = true;
         this.player.setScale(0.03125); // 1/32th of original size this is causeing issues if i want to change the hitbox size
@@ -507,17 +727,41 @@ class Level extends Phaser.Scene {
 
                
         this.onStart();   //call onStart function to set up level
+
+    }
+    onEvent(){
+        this.playerActive = true;
     }
     update(){
 
+        musicVolume.masterVol = (900-this.slider.y)/600;
+        musicVolume.BGMusic.volume = musicVolume.masterVol;
+        if(musicVolume.sliderGlobal < 900 && musicVolume.settingsOpen == true){
+            console.log('music on',musicVolume.sliderGlobal,musicVolume.settingsOpen);
+            musicVolume.musicOn.setVisible(true);
+            musicVolume.MusicOnTxt.setVisible(true);
+            musicVolume.musicOff.setVisible(false);
+            musicVolume.MusicOffTxt.setVisible(false);
 
+        }
+        else if(musicVolume.sliderGlobal >=900 && musicVolume.settingsOpen== true){
+            console.log('music off',this.slider.y,musicVolume.sliderGlobal,musicVolume.settingsOpen);
+            musicVolume.musicOn.setVisible(false);
+            musicVolume.MusicOnTxt.setVisible(false);
+            musicVolume.musicOff.setVisible(true);
+            musicVolume.MusicOffTxt.setVisible(true);
+        }
+
+        if(this.playerActive == true){
         if(this.player.y > 1280) {          //if player falls off map, move to last level
+            musicVolume.BGMusic.pause();
             this.scene.start(this.lastLevel);
             this.player.y = 0;
             this.player.setVelocityX(currentVelX);
             this.player.setVelocityY(currentVelY);
         }
         if(this.player.y < 0) {             //if player hits top of map, move to next level
+            musicVolume.BGMusic.pause();
             console.log("hit top" + this.nextLevel + this.player.y);
             this.scene.start(this.nextLevel);
             this.player.y = 1024 - 64;
@@ -570,7 +814,7 @@ class Level extends Phaser.Scene {
         //console.log(game.input.mousePointer.x + " " + game.input.mousePointer.y);
         //need to compare mouse position to player position for mobile game, so that when the map is clicked the player jumps twards that position
     }
-
+}
     onStart(){
         console.log("Level not implemented yet");
     }
@@ -580,8 +824,10 @@ class Level extends Phaser.Scene {
     }
 
     goalHit() {
+        musicVolume.BGMusic.pause();
         this.scene.start(this.scene.start('EndCutscene'));
       }
+    
 }
 
 
@@ -746,6 +992,13 @@ class Credits extends Phaser.Scene {
     update(){}
 }
 
+
+const musicVolume = {
+    masterVol:0.5,
+    sliderGlobal: 600,
+    muteVol: 0,
+    settingsOpen: false
+}
 
 
 //set up config and game object
