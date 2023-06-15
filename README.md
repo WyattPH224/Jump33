@@ -26,4 +26,11 @@ We showed this theme through showing the goal of the game in the first screen, b
 
 Selectable Requirements attempted: 
 
-  Data-driven experience progression (e.g. defined in a separate JSON/XML or other data file). Each level is stored in and loaded from a seperate json file.
+  Data-driven experience progression (e.g. defined in a separate JSON/XML or other data file). Each level is stored in and loaded from a separate json file.
+
+
+  FullScreen troubles:
+
+  Fullscreen works on computers but not on mobile IOS devices. Unsure if the problems extend to Andriod devices as no members in our group own one.
+
+  We looked for solutions throughout the web and each result gave us the same answer which is that fullscreen is not supported on mobile devices when using phaser. However, ipads were an exception to this
