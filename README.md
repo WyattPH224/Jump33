@@ -34,3 +34,6 @@ Selectable Requirements attempted:
   Fullscreen works on computers but not on mobile IOS devices. Unsure if the problems extend to Andriod devices as no members in our group own one.
 
   We looked for solutions throughout the web and each result gave us the same answer which is that fullscreen is not supported on mobile devices when using phaser. However, ipads were an exception to this
+
+
+Volume will now be remembered across scenes 
