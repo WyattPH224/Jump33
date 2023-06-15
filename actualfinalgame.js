@@ -151,7 +151,7 @@ class Load extends Phaser.Scene{
             .setDepth(110)
             .setScale(.2)
             //.setStyle({ fontSize: `${2 * this.s}px`, color: '#880808'})
-            .setInteractive({useHandCursor: true})
+            .setInteractive()
             .on('pointerdown', () => {
                 if (this.scale.isFullscreen) {
                     this.scale.stopFullscreen();
